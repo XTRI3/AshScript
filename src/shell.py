@@ -1,8 +1,8 @@
-import ashscript
+import AshScript
 
 while True:
-    text = input('ashscript > ')
-    result, error = ashscript.run('<stdin>', text)
+    text = input('AshScript > ')
+    result, error = AshScript.run('<stdin>', text)
 
     if error: print(error.as_string())
     else: print(result)
