@@ -294,6 +294,39 @@ class Parser:
 
 		return res.success(left)
 #######################################
+# NUMBER
+#######################################
+
+class Number:
+	def __init__(self, value):
+		self.value = value
+		self.set_pos()
+
+	def set_pos(self, pos_start=None, pos_end=None):
+		self.pos_start = pos_start
+		self.pos_end = pos_end
+		return self
+
+	def added_to(self, other):
+		if isinstance(other, Number):
+			return Number(self.value + other.value)
+
+	def subbed_by(self, other):
+		if isinstance(other, Number):
+			return Number(self.value - other.value)
+
+	def multed_by(self, other):
+		if isinstance(other, Number):
+			return Number(self.value * other.value)
+
+	def divided_by(self, other):
+		if isinstance(other, Number):
+			return Number(self.value / other.value)
+
+	def __repr__(self):
+		return str(self.value)
+
+#######################################
 # INTERPRETER
 #######################################
 
@@ -309,16 +342,25 @@ class Interepreter:
 	#######################################
 
 	def visit_NumberNode(self, node):
-		print("Found number node")
+		return Number(node.tok.value).set_pos(node.pos_start, node.pos_end)
 
 	def visit_BinOpNode(self, node):
-		print("Found bin op node")
-		self.visit(node.left_node)
-		self.visit(node.right_node)
+		left = self.visit(node.left_node)
+		right = self.visit(node.right_node)
+
+		if node.op.tok.type == TT_PLUS:
+			result = left.added_to(right)
+		elif node.op_tok.type == TT_MINUS:
+			result = left.subbed_by(right)
+		elif node.op_tok.type == TT_MUL:
+			result = left.multed_by(right)
+		elif node.op_tok.type == TT_DIV:
+			result = left.divided_by(right)
+
+		return result
 
 	def visit_UnaryOpNode(self, node):
-		print("Found unary op node")  # 4:36
-		self.visit(node.node)
+		number = self.visit(node.node) #8:07
 
 #######################################
 # RUN
