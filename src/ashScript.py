@@ -93,9 +93,9 @@ TT_PLUS     = 'PLUS'
 TT_MINUS    = 'MINUS'
 TT_MUL      = 'MUL'
 TT_DIV      = 'DIV'
+TT_POW     = 'POW'
 TT_LPAREN   = 'LPAREN'
 TT_RPAREN   = 'RPAREN'
-TT_EXPO     = 'EXPO'
 TT_EOF		= 'EOF'
 
 class Token:
@@ -158,7 +158,7 @@ class Lexer:
 				tokens.append(Token(TT_RPAREN, pos_start=self.pos))
 				self.advance()
 			elif self.current_char == '^':
-				tokens.append(Token(TT_EXPO, pos_start=self.pos))
+				tokens.append(Token(TT_POW, pos_start=self.pos))
 				self.advance()
 			else:
 				pos_start = self.pos.copy()
@@ -309,7 +309,7 @@ class Parser:
 		))
 
 	def term(self):
-		return self.bin_op(self.factor, (TT_MUL, TT_DIV, TT_EXPO))
+		return self.bin_op(self.factor, (TT_MUL, TT_DIV, TT_POW))
 
 	def expr(self):
 		return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
@@ -382,7 +382,7 @@ class Number:
 		if isinstance(other, Number):
 			return Number(self.value * other.value).set_context(self.context), None
 
-	def expo_by(self, other):
+	def pow_by(self, other):
 		if isinstance(other, Number):
 			return Number(self.value ** other.value).set_context(self.context), None
 
@@ -445,8 +445,8 @@ class Interpreter:
 			result, error = left.multed_by(right)
 		elif node.op_tok.type == TT_DIV:
 			result, error = left.dived_by(right)
-		elif node.op_tok.type == TT_EXPO:
-			result, error = left.expo_by(right)
+		elif node.op_tok.type == TT_POW:
+			result, error = left.pow_by(right)
 
 		if error:
 			return res.failure(error)
