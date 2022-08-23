@@ -95,6 +95,7 @@ TT_MUL      = 'MUL'
 TT_DIV      = 'DIV'
 TT_LPAREN   = 'LPAREN'
 TT_RPAREN   = 'RPAREN'
+TT_EXPO     = 'EXPO'
 TT_EOF		= 'EOF'
 
 class Token:
@@ -155,6 +156,9 @@ class Lexer:
 				self.advance()
 			elif self.current_char == ')':
 				tokens.append(Token(TT_RPAREN, pos_start=self.pos))
+				self.advance()
+			elif self.current_char == '^':
+				tokens.append(Token(TT_EXPO, pos_start=self.pos))
 				self.advance()
 			else:
 				pos_start = self.pos.copy()
@@ -266,7 +270,7 @@ class Parser:
 		if not res.error and self.current_tok.type != TT_EOF:
 			return res.failure(InvalidSyntaxError(
 				self.current_tok.pos_start, self.current_tok.pos_end,
-				"Expected '+', '-', '*' or '/'"
+				"Expected '+', '-', '*', '^' or '/'"
 			))
 		return res
 
@@ -305,7 +309,7 @@ class Parser:
 		))
 
 	def term(self):
-		return self.bin_op(self.factor, (TT_MUL, TT_DIV))
+		return self.bin_op(self.factor, (TT_MUL, TT_DIV, TT_EXPO))
 
 	def expr(self):
 		return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
@@ -378,6 +382,10 @@ class Number:
 		if isinstance(other, Number):
 			return Number(self.value * other.value).set_context(self.context), None
 
+	def expo_by(self, other):
+		if isinstance(other, Number):
+			return Number(self.value ** other.value).set_context(self.context), None
+
 	def dived_by(self, other):
 		if isinstance(other, Number):
 			if other.value == 0:
@@ -437,6 +445,8 @@ class Interpreter:
 			result, error = left.multed_by(right)
 		elif node.op_tok.type == TT_DIV:
 			result, error = left.dived_by(right)
+		elif node.op_tok.type == TT_EXPO:
+			result, error = left.expo_by(right)
 
 		if error:
 			return res.failure(error)
